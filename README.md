@@ -37,7 +37,7 @@ Push(4) // blocks
                         4           Pop() -> 3
                                     Pop() -> 4
                                     Pop() // blocks
-Push(5) 5
+Push(5)                 5
                                     -> 5 // is released
 ```
 Notes:
