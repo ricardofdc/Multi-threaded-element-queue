@@ -6,8 +6,7 @@
 - If the queue is empty, reading thread will block and wait for the next element.
 - If the queue is full, writing thread will block and wait for another thread to remove an item.
 
-Extra: The reading/writing threads should optionally block for a certain period of time. If the
-action is successful within this time, true is returned, otherwise false.
+Extra: The reading/writing threads should optionally block for a certain period of time. If the action is successful within this time, true is returned, otherwise false.
 
 The class interface should look like this:
 

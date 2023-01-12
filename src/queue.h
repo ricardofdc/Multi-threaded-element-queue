@@ -10,6 +10,9 @@
  */
 
 #include <queue>
+#include <mutex>
+#include <iostream>
+#include <optional>
 #include "myExcepions.h"
 
 /**
@@ -23,6 +26,7 @@ private:
 	int size; 	/**< Size of the queue*/
 	int count;	/**< Amount of elements currently store in the queue */
 	std::queue<T> objects;	/**< Elements stored on the queue */
+	std::mutex m;
 
 public:
 	/**
@@ -50,8 +54,11 @@ public:
 		if(this->count >= this->size){
 			throw QueueFullException();
 		}
+		m.lock();
 		this->objects.push(element);
+		m.unlock();
 		this->count++;
+		this->print_queue(this->objects);
 	};
 
 
@@ -62,13 +69,16 @@ public:
 	 * 
 	 * @return (T) element popped or 'nullptr' if queue is empty
 	 */
-	T Pop() {
+	std::optional <T> Pop() {
 		if(this->count <= 0){
-			return nullptr;
+			return std::nullopt;
 		}
-		T e = this->objects.front();
+		m.lock();
+		std::optional <T> e = this->objects.front();
 		this->objects.pop();
+		m.unlock();
 		this->count--;
+		this->print_queue(this->objects);
 		return e;
 	};
 
@@ -89,4 +99,14 @@ public:
 	int Size() {
 		return this->size;
 	}; 
+
+	void print_queue(std::queue<T> q) {
+		while (!q.empty())
+		{
+			std::cout << q.front() << " ";
+			q.pop();
+		}
+		std::cout << std::endl;
+		std::cout << std::endl;
+	}
 };
