@@ -1,5 +1,34 @@
 # Multi-threaded element queue in C++
 
+## Build and run instructions
+
+- To build the project:
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+- To run the tests:
+
+```bash
+# inside 'build' folder 
+ctest
+```
+
+- To run the app:
+
+```bash
+# inside 'build' folder 
+./app
+```
+
+>All these commands where tested using zsh on masOS Monterey (version 12.6.1), cmake (version 3.25.0) and AppleClang (version 14.0.0.1400029).
+
+## Problem formalization
+
 #### 1. Develop a class from scratch to queue a finite number of elements. This class will be used for multi-threaded communication as follows:
 
 - Reading thread pops elements while writing thread pushes elements.
