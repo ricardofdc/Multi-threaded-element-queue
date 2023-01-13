@@ -40,16 +40,4 @@ struct QueueFullException : public std::exception
     }
 };
 
-/**
- * @brief Exception thrown when Push() is called with an objet from a different type.
- * 
- */
-struct WrongTypeException : public std::exception
-{
-	const char * what () const throw ()
-    {
-    	return "Types don't match.";
-    }
-};
-
 #endif
