@@ -9,11 +9,14 @@
  * 
  */
 
+#ifndef MY_QUEUE_
+#define MY_QUEUE_
+
+#include "myExcepions.h"
 #include <queue>
 #include <mutex>
 #include <iostream>
 #include <optional>
-#include "myExcepions.h"
 
 /**
  * @brief Class used to queue a finite number of elements of any type.
@@ -51,14 +54,13 @@ public:
 	 * @param element 
 	 */
 	void Push(T element) {
+		std::unique_lock<std::mutex> lock(this->m);
 		if(this->count >= this->size){
 			throw QueueFullException();
 		}
-		m.lock();
 		this->objects.push(element);
-		m.unlock();
 		this->count++;
-		this->print_queue(this->objects);
+		lock.unlock();
 	};
 
 
@@ -70,15 +72,14 @@ public:
 	 * @return (T) element popped or 'nullptr' if queue is empty
 	 */
 	std::optional <T> Pop() {
+		std::unique_lock<std::mutex> lock(this->m);
 		if(this->count <= 0){
 			return std::nullopt;
 		}
-		m.lock();
 		std::optional <T> e = this->objects.front();
 		this->objects.pop();
-		m.unlock();
 		this->count--;
-		this->print_queue(this->objects);
+		lock.unlock();
 		return e;
 	};
 
@@ -87,7 +88,7 @@ public:
 	 * 
 	 * @return (int) amount of elements currently stored in the queue
 	 */
-	int Count() {
+	int Count() const {
 		return this->count;
 	};
 
@@ -96,17 +97,31 @@ public:
 	 * 
 	 * @return (int) maximum number of elements in the queue.
 	 */
-	int Size() {
+	int Size() const {
 		return this->size;
 	}; 
 
-	void print_queue(std::queue<T> q) {
-		while (!q.empty())
-		{
-			std::cout << q.front() << " ";
-			q.pop();
-		}
-		std::cout << std::endl;
-		std::cout << std::endl;
+	/**
+	 * @brief Get the Objects object
+	 * 
+	 * @return std::queue<T> objects.
+	 */
+	std::queue<T> getObjects() const {
+		return this->objects;
 	}
 };
+
+template <typename T>
+std::ostream& operator<<(std::ostream &s, const Queue<T> &queue) {
+	std::queue<T> q = queue.getObjects();
+	s << "[";
+	while (!q.empty())
+	{
+		s << q.front() << ",";
+		q.pop();
+	}
+	s << "]";
+	return s;
+};
+
+#endif

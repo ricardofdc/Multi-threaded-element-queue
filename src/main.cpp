@@ -45,42 +45,45 @@ bool read_enabled = false;	/**< to be used by cv_write */
  * @param msg Message queue to receive instructions from main() (or any other function that creates this thread).
  */
 template <typename T>
-void read(Queue<T> & q, std::queue<bool> & msg){
+void read(Queue<T> & q, std::queue<bool> & msg_queue){
+	std::cout << "Reader thread start." << std::endl;
 	while(1){
 		// check if msg queue has new messages
-		if(msg.empty()){
+		if(msg_queue.empty()){
 			continue;
 		}
 
 		// check message
 		// true -> do a Pop operation
 		// false -> end thread
-		if(msg.front() == false){
+		if(msg_queue.front() == false){
+			std::cout << "Reader thread end." << std::endl;
 			return;
 		}
 
 		// check if queue returns an object
-		if (!q.Pop()){
+		std::optional<T> obj;
+		if (!(obj = q.Pop())){
 			// Queue is empty
 			// wait for objects to be added
 			read_enabled = false;
 			std::unique_lock<std::mutex> lock(m);
 			while(!read_enabled) {
-				std::cout << "locked read" << std::endl;
+				std::cout << "-- reader -- ! locked !" << std::endl << std::endl;
 				cv_read.wait(lock);
 			}
 			continue;
 		}
+		std::cout << "-- reader -- pop: " << obj.value() << std::endl;
+		std::cout << "::: Queue status: " << q << std::endl << std::endl;
 		// object was returned 
-		// delete msg from queue and notify writer if needed
-		msg.pop();	
+		// delete message/command from msg_queue and notify writer if needed
+		msg_queue.pop();	
 		if(!write_enabled){
 			write_enabled = true;
 			cv_write.notify_one();
 		}
 	}
-
-	std::cout << "end of reader" << endl;
 }
 
 /**
@@ -103,24 +106,30 @@ void read(Queue<T> & q, std::queue<bool> & msg){
  * @param msg Message queue to receive instructions from main() (or any other function that creates this thread).
  */
 template <typename T>
-void write(Queue<T> & q, std::queue<T> & msg){
+void write(Queue<T> & q, std::queue<std::optional<T>> & msg_queue){
+	std::cout << "Writer thread start." << std::endl;
 	while(1){
 		// check if msg queue has new messages
-		if(msg.empty()){
+		if(msg_queue.empty()){
 			continue;
 		}
 
 		// if message is '-1' end thread 
 		// works in this use case, might need to be changed
 		// for other use cases
-		if(!msg.front()){
+		if(!msg_queue.front()){
+			std::cout << "Writer thread end." << std::endl;
 			return;
 		}
 
 		// try to push object to Queue
 		try{
-			q.Push(msg.front());
-			msg.pop();
+			q.Push(msg_queue.front().value());
+			std::cout << "++ writer ++ push: " << msg_queue.front().value() << std::endl;
+			std::cout << "::: Queue status: " << q << std::endl << std::endl;
+
+			// remove message/command from msg_queue
+			msg_queue.pop();
 
 			// notifies reader if needed
 			if(!read_enabled){
@@ -135,7 +144,7 @@ void write(Queue<T> & q, std::queue<T> & msg){
 			write_enabled = false;
 			std::unique_lock<std::mutex> lock(m);
 			while(!write_enabled) {
-				std::cout << "locked write" << std::endl;
+				std::cout << "++ writer ++ ! locked !" << std::endl << std::endl;
 				cv_write.wait(lock);
 			}
 		}
@@ -148,7 +157,7 @@ void write(Queue<T> & q, std::queue<T> & msg){
  * 1. Creates a Queue of int with size 2.
  * 2. Creates two message queues to send commands to the threads.
  * 3. Creates two threads (reader and writer).
- * 4. Sends multiple commands to the threads.
+ * 4. Sends multiple commands to the threads (use of sleeps to simulate user action).
  * 5. Waits for the threads to join.
  * 
  * @param argc 
