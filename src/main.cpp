@@ -139,7 +139,7 @@ void write(Queue<T> & q, std::queue<std::optional<T>> & msg_queue){
 		}
 
 		// Queue is full
-		// wait for objects to be added
+		// wait for objects to be removed
 		catch (QueueFullException e){
 			write_enabled = false;
 			std::unique_lock<std::mutex> lock(m);
